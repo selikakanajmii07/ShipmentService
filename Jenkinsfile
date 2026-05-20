@@ -22,25 +22,25 @@ pipeline {
 
                 dir('PaymentService') {
                     catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                        sh 'go test -v -run TestValidatePayment ./...'
+                        bat 'go test -v -run TestValidatePayment ./...'
                     }
                 }
 
                 dir('OrderService') {
                     catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                        sh 'go test -short ./...'
+                        bat 'go test -short ./...'
                     }
                 }
 
                 dir('ShipmentService') {
                     catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                        sh 'go test ./...'
+                        bat 'go test ./...'
                     }
                 }
 
                 dir('DeliveryService') {
                     catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                        sh 'go test ./...'
+                        bat 'go test ./...'
                     }
                 }
             }
@@ -50,30 +50,30 @@ pipeline {
             steps {
 
                 dir('PaymentService') {
-                    sh 'go vet ./...'
+                    bat 'go vet ./...'
                 }
 
                 dir('OrderService') {
-                    sh 'go vet ./...'
+                    bat 'go vet ./...'
                 }
 
                 dir('ShipmentService') {
-                    sh 'go vet ./...'
+                    bat 'go vet ./...'
                 }
 
                 dir('DeliveryService') {
-                    sh 'go vet ./...'
+                    bat 'go vet ./...'
                 }
             }
         }
 
         stage('Build Image') {
             steps {
-                sh '''
-                docker build -t $PAYMENT_IMAGE ./PaymentService
-                docker build -t $ORDER_IMAGE ./OrderService
-                docker build -t $SHIPMENT_IMAGE ./ShipmentService
-                docker build -t $DELIVERY_IMAGE ./DeliveryService
+                bat '''
+                docker build -t %PAYMENT_IMAGE% ./PaymentService
+                docker build -t %ORDER_IMAGE% ./OrderService
+                docker build -t %SHIPMENT_IMAGE% ./ShipmentService
+                docker build -t %DELIVERY_IMAGE% ./DeliveryService
                 '''
             }
         }
@@ -81,47 +81,47 @@ pipeline {
         stage('Functional Test') {
             steps {
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    sh '''
-                    docker rm -f test-payment test-order test-shipment test-delivery || true
+                    bat '''
+                    docker rm -f test-payment test-order test-shipment test-delivery
 
-                    docker run -d --name test-payment \
-                      -e DB_HOST=host.docker.internal \
-                      -e DB_NAME=payment_db \
-                      -e DB_PASS=admin123 \
-                      -p 8082:8082 \
-                      $PAYMENT_IMAGE
+                    docker run -d --name test-payment ^
+                      -e DB_HOST=host.docker.internal ^
+                      -e DB_NAME=payment_db ^
+                      -e DB_PASS=admin123 ^
+                      -p 8082:8082 ^
+                      %PAYMENT_IMAGE%
 
-                    docker run -d --name test-order \
-                      -p 8081:8081 \
-                      $ORDER_IMAGE
+                    docker run -d --name test-order ^
+                      -p 8081:8081 ^
+                      %ORDER_IMAGE%
 
-                    docker run -d --name test-shipment \
-                      -e DB_HOST=host.docker.internal \
-                      -e DB_NAME=shipment_db \
-                      -p 8085:8085 \
-                      $SHIPMENT_IMAGE
+                    docker run -d --name test-shipment ^
+                      -e DB_HOST=host.docker.internal ^
+                      -e DB_NAME=shipment_db ^
+                      -p 8085:8085 ^
+                      %SHIPMENT_IMAGE%
 
-                    docker run -d --name test-delivery \
-                      -e DB_HOST=host.docker.internal \
-                      -e DB_NAME=delivery_db \
-                      -p 8086:8086 \
-                      $DELIVERY_IMAGE
+                    docker run -d --name test-delivery ^
+                      -e DB_HOST=host.docker.internal ^
+                      -e DB_NAME=delivery_db ^
+                      -p 8086:8086 ^
+                      %DELIVERY_IMAGE%
 
-                    sleep 5
+                    timeout /t 5
 
-                    curl -s -X POST http://host.docker.internal:8082/payment \
-                      -H "Content-Type: application/json" \
-                      -d '{"amount":1,"paid":1}'
+                    curl -X POST http://localhost:8082/payment ^
+                      -H "Content-Type: application/json" ^
+                      -d "{\\"amount\\":1,\\"paid\\":1}"
 
-                    curl -s -X POST http://host.docker.internal:8081/order \
-                      -H "Content-Type: application/json" \
-                      -d '{"user_id":1,"weight_kg":2,"distance_km":5,"base_price":10000}'
+                    curl -X POST http://localhost:8081/order ^
+                      -H "Content-Type: application/json" ^
+                      -d "{\\"user_id\\":1,\\"weight_kg\\":2,\\"distance_km\\":5,\\"base_price\\":10000}"
 
-                    curl -s -X POST http://host.docker.internal:8085/shipment
+                    curl -X POST http://localhost:8085/shipment
 
-                    curl -s -X POST http://host.docker.internal:8086/delivery
+                    curl -X POST http://localhost:8086/delivery
 
-                    docker rm -f test-payment test-order test-shipment test-delivery || true
+                    docker rm -f test-payment test-order test-shipment test-delivery
                     '''
                 }
             }
@@ -135,11 +135,11 @@ pipeline {
                     usernameVariable: 'USERNAME',
                     passwordVariable: 'PASSWORD'
                 )]) {
-                    sh '''
-                    echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
-                    docker push $PAYMENT_IMAGE
-                    docker push $SHIPMENT_IMAGE
-                    docker push $DELIVERY_IMAGE
+                    bat '''
+                    echo %PASSWORD% | docker login -u %USERNAME% --password-stdin
+                    docker push %PAYMENT_IMAGE%
+                    docker push %SHIPMENT_IMAGE%
+                    docker push %DELIVERY_IMAGE%
                     '''
                 }
 
@@ -148,9 +148,9 @@ pipeline {
                     usernameVariable: 'USERNAME',
                     passwordVariable: 'PASSWORD'
                 )]) {
-                    sh '''
-                    echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
-                    docker push $ORDER_IMAGE
+                    bat '''
+                    echo %PASSWORD% | docker login -u %USERNAME% --password-stdin
+                    docker push %ORDER_IMAGE%
                     '''
                 }
             }
@@ -158,13 +158,13 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sh 'echo "DEPLOY OK"'
+                bat 'echo DEPLOY OK'
             }
         }
 
         stage('Verify') {
             steps {
-                sh 'echo "PIPELINE SUCCESS"'
+                bat 'echo PIPELINE SUCCESS'
             }
         }
     }
