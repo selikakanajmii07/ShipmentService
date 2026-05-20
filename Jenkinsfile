@@ -48,7 +48,7 @@ pipeline {
                       -p 8085:8085 ^
                       %SHIPMENT_IMAGE%
 
-                    timeout /t 5
+                    ping 127.0.0.1 -n 10 > nul
 
                     curl -X POST http://localhost:8085/shipment
 
@@ -65,17 +65,15 @@ pipeline {
                     usernameVariable: 'USERNAME',
                     passwordVariable: 'PASSWORD'
                 )]) {
-                    bat '''
-                    echo %PASSWORD% | docker login -u %USERNAME% --password-stdin
-                    docker push %SHIPMENT_IMAGE%
-                    '''
+                    bat 'docker login -u %USERNAME% -p %PASSWORD%'
+                    bat 'docker push %SHIPMENT_IMAGE%'
                 }
             }
         }
 
         stage('Deploy Kubernetes') {
             steps {
-                echo 'Deploy kubernetes placeholder'
+                echo 'Deploy Kubernetes placeholder'
             }
         }
 
