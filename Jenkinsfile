@@ -60,7 +60,16 @@ pipeline {
 
         stage('Push Image') {
             steps {
-                echo 'Push image placeholder'
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-login',
+                    usernameVariable: 'USERNAME',
+                    passwordVariable: 'PASSWORD'
+                )]) {
+                    bat '''
+                    echo %PASSWORD% | docker login -u %USERNAME% --password-stdin
+                    docker push %SHIPMENT_IMAGE%
+                    '''
+                }
             }
         }
 
