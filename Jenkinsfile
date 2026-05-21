@@ -73,7 +73,7 @@ pipeline {
 
         stage('Deploy Kubernetes') {
             steps {
-                echo 'Deploy Kubernetes placeholder'
+                echo 'Deploy kubernetes placeholder'
             }
         }
 
