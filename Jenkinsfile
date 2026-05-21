@@ -44,13 +44,13 @@ pipeline {
                       -e DB_HOST=host.docker.internal ^
                       -e DB_NAME=shipment_db ^
                       -e DB_USER=postgres ^
-                      -e DB_PASSWORD=postgres ^
+                      -e DB_PASSWORD=Selikaknjm07 ^
                       -p 8085:8085 ^
                       %SHIPMENT_IMAGE%
 
-                    ping 127.0.0.1 -n 10 > nul
+                    ping 127.0.0.1 -n 15 > nul
 
-                    curl -X POST http://localhost:8085/shipment
+                    docker logs test-shipment
 
                     docker rm -f test-shipment
                     '''
@@ -65,8 +65,8 @@ pipeline {
                     usernameVariable: 'USERNAME',
                     passwordVariable: 'PASSWORD'
                 )]) {
-                    bat 'docker login -u %USERNAME% -p %PASSWORD%'
-                    bat 'docker push %SHIPMENT_IMAGE%'
+                    bat "docker login -u %USERNAME% -p %PASSWORD%"
+                    bat "docker push %SHIPMENT_IMAGE%"
                 }
             }
         }
